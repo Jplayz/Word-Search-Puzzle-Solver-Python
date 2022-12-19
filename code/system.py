@@ -207,75 +207,137 @@ def find_words(labels: np.ndarray, words: List[str], model: dict) -> List[tuple]
     allWordPositions = []
 
     for word in words:
-        word = word.upper()
         found = False
+        word = word.upper()
+        tempPosition =[]
         for x in range(len(labels)):
             for y in range(len(labels[x])):
-                if labels[x][y] == word[0]:
-                    if checkRowForward(labels, word, x, y) != None:
-                        allWordPositions.append(checkRowForward(labels, word, x , y))
-                        found = True
+                if checkRowForward(labels, word, x , y) != None:
+                    tempPosition.append(checkRowForward(labels, word, x , y))
+                    found = True
 
-                    elif checkRowBackward(labels, word, x, y) != None:
-                        allWordPositions.append(checkRowBackward(labels, word, x , y))
-                        found = True
+                if checkRowBackward(labels, word, x , y) != None:
+                    tempPosition.append(checkRowBackward(labels, word, x , y))
+                    found = True
 
-                    elif checkColumnDown(labels, word, x, y) != None:
-                        allWordPositions.append(checkColumnDown(labels, word, x , y))
-                        found = True
+                if checkColumnDown(labels, word, x , y) != None:
+                    tempPosition.append(checkColumnDown(labels, word, x , y))
+                    found = True
 
-                    elif checkColumnUp(labels, word, x, y) != None:
-                        allWordPositions.append(checkColumnUp(labels, word, x , y))  
-                        found = True
+                if checkColumnUp(labels, word, x , y) != None:
+                    tempPosition.append(checkColumnUp(labels, word, x , y))
+                    found = True
                 
-                    elif checkDiagonalDownRight(labels, word, x, y) != None:
-                        allWordPositions.append(checkDiagonalDownRight(labels, word, x , y))   
-                        found = True
-                    
-                    elif checkDiagonalDownLeft(labels, word, x, y) != None:
-                        allWordPositions.append(checkDiagonalDownLeft(labels, word, x , y))
-                        found = True
+                if checkDiagonalDownRight(labels, word, x, y) != None:
+                    tempPosition.append(checkDiagonalDownRight(labels, word, x, y))
+                    found = True
 
-                    elif checkDiagonalUpRight(labels, word, x, y) != None:
-                        allWordPositions.append(checkDiagonalUpRight(labels, word, x , y))   
-                        found = True
-                    
-                    elif checkDiagonalUpLeft(labels, word, x, y) != None:
-                        allWordPositions.append(checkDiagonalUpLeft(labels, word, x , y))    
-                        found = True
+                if checkDiagonalDownLeft(labels, word, x, y) != None:
+                    tempPosition.append(checkDiagonalDownLeft(labels, word, x, y))
+                    found = True
 
-        if found == False:
-           allWordPositions.append((0,0,0,0))         
+                if checkDiagonalUpRight(labels, word, x, y) != None:
+                    tempPosition.append(checkDiagonalUpRight(labels, word, x, y))
+                    found = True
 
+                if checkDiagonalUpLeft(labels, word, x, y) != None:
+                    tempPosition.append(checkDiagonalUpLeft(labels, word, x, y))
+                    found = True
+
+        if found == True:
+            print(tempPosition)
+            if len(tempPosition) > 1:
+
+                bestword = ""
+                bestPos = None
+                for item in tempPosition:
+                    if bestword == "":
+                            bestPos = item[0]
+                            bestword = item[1]
+                        
+                    else:
+                        if checkBestWord(word, bestword, item[1]) == item[1]:
+                            bestPos = item[0]
+                            bestword = item[1]
+                        
+                allWordPositions.append(bestPos)
+
+            else:
+                allWordPositions.append(tempPosition[0][0])
+
+                
+        else:
+            allWordPositions.append((0,0,0,0))
+
+    print(allWordPositions)
     return allWordPositions
 
+def checkBestWord(correct: str, word1: str, word2: str):
+    score = [0,0]
+    for i in range(len(correct)):
+        if word1[i] == correct[i]:
+            score[0] += 1
 
-# This checks the row going forward
+        if word2[i] == correct[i]:
+            score[1] += 1
+    
+    if score[0] > score[1]:
+        return word1
+
+    elif score[1] > score[0]:
+        return word2
+
+    else:
+        if word1 < word2:
+            return word1
+        else:
+            return word2
+
 def checkRowForward(labels: np.ndarray, word: str, x: int, y: int):
-    counter = 0
-    checkPercent = math.floor(len(word) / 3)
-    for w in range(len(word)):
-        if (y + w) < len(labels[x]):
-            if w == (len(word) - 1) and (labels[x][y+w] == word[w]):
-                return (x, y, x, y+w)
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
 
-            elif labels[x][y+w] == word[w]:
+    for w in range(0,wordLen):
+        if (y+w) < len(labels[x]):
+            if word[w] == labels[x][y+w]:
+                foundWord += labels[x][y+w]
                 continue
-            
+
+            elif (word[w] != labels[x][y+w]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x][y+w]
+                continue
+
             else:
                 break
 
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x, y+(wordLen-1)), foundWord)
+        
         else:
-            break
-    return 
+            return None
+
+    return None
 
 # This checks the row going backwards
 def checkRowBackward(labels: np.ndarray, word: str, x: int, y: int):
-    for w in range(len(word)):
-        if (y - w) > 0:
-            if w == (len(word) - 1) and (labels[x][y-w] == word[w]):
-                return (x, y, x, y-w)
-            elif labels[x][y-w] == word[w]:
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
+
+    for w in range(wordLen):
+        if (y - w) >= 0:
+            if word[w] == labels[x][y-w]:
+                foundWord += labels[x][y-w]
+                continue
+
+            elif (word[w] != labels[x][y-w]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x][y-w]
                 continue
 
             else:
@@ -283,99 +345,182 @@ def checkRowBackward(labels: np.ndarray, word: str, x: int, y: int):
 
         else:
             break
-    return
+
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x, y-(wordLen-1)), foundWord)
+        
+        else:
+            return None
+
+    return None
+
 
 def checkColumnDown(labels: np.ndarray, word: str, x: int, y: int):
-    for w in range(len(word)):
-        if (x + w) < len(labels):
-            if w == (len(word) - 1) and (labels[x+w][y] == word[w]):
-                return (x, y, x+w, y)
-            elif labels[x+w][y] == word[w]:
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
+
+    for w in range(wordLen):
+        if (x+w) < len(labels):
+            if word[w] == labels[x+w][y]:
+                foundWord += labels[x+w][y]
                 continue
 
-            else:
-                break
+            elif (word[w] != labels[x+w][y]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x+w][y]
+                continue
 
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x+(wordLen-1), y), foundWord)
+        
         else:
-            break
-    return 
+            return None
 
+    return None
 
 def checkColumnUp(labels: np.ndarray, word: str, x: int, y: int):
-    for w in range(len(word)):
-        if (x - w) >= 0:
-            if (w == (len(word) - 1)) and (labels[x-w][y] == word[w]):
-                return (x, y, x-w, y)
-            elif labels[x-w][y] == word[w]:
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
+
+    for w in range(wordLen):
+        if (x-w) >= 0:
+            if word[w] == labels[x-w][y]:
+                foundWord += labels[x-w][y]
                 continue
 
-            else:
-                break
+            elif (word[w] != labels[x-w][y]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x-w][y]
+                continue
 
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x-(wordLen-1), y), foundWord)
+        
         else:
-            break
-    return
+            return None
+
+    return None
 
 def checkDiagonalDownRight(labels: np.ndarray, word: str, x: int, y: int):
-    for w in range(len(word)):
-        if ((x + w) < len(labels)) and((y + w) < len(labels[x])):
-            if w == (len(word) - 1) and labels[x+w][y+w] == word[w]:
-                return (x, y, x+w, y+w)
-            elif labels[x+w][y+w] == word[w]:
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
+
+    for w in range(0,wordLen):
+        if (y+w) < len(labels[x]) and (x+w) < len(labels):
+            if word[w] == labels[x+w][y+w]:
+                foundWord += labels[x+w][y+w]
+                continue
+
+            elif (word[w] != labels[x+w][y+w]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x+w][y+w]
                 continue
 
             else:
                 break
+
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x+(wordLen-1), y+(wordLen-1)), foundWord)
+        
         else:
-            break
-    return
+            return None
+
+    return None
+
 
 def checkDiagonalDownLeft(labels: np.ndarray, word: str, x: int, y: int):
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
+
     for w in range(len(word)):
         if ((x + w) < len(labels)) and((y - w) > 0):
-            if w == (len(word) - 1) and labels[x+w][y-w] == word[w]:
-                return (x, y, x+w, y-w)
-            elif labels[x+w][y-w] == word[w]:
+            if word[w] == labels[x+w][y-w]:
+                foundWord += labels[x+w][y-w]
+                continue
+
+            elif (word[w] != labels[x+w][y-w]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x+w][y-w]
                 continue
 
             else:
                 break
+
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x+(wordLen-1), y-(wordLen-1)), foundWord)
+        
         else:
-            break
-    return
+            return None
+
+    return None
 
 def checkDiagonalUpRight(labels: np.ndarray, word: str, x: int, y: int):
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
+
     for w in range(len(word)):
-        if ((x - w) > 0) and((y + w) < len(labels[x])):
-            if w == (len(word) - 1) and labels[x-w][y+w] == word[w]:
-                return (x, y, x-w, y+w)
-            elif labels[x-w][y+w] == word[w]:
+        if ((x - w) >= 0) and((y + w) < len(labels[x])):
+            if word[w] == labels[x-w][y+w]:
+                foundWord += labels[x-w][y+w]
+                continue
+
+            elif (word[w] != labels[x-w][y+w]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x-w][y+w]
                 continue
 
             else:
                 break
+
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x-(wordLen-1), y+(wordLen-1)), foundWord)
+        
         else:
-            break
-    return
+            return None
+
+    return None
 
 def checkDiagonalUpLeft(labels: np.ndarray, word: str, x: int, y: int):
+    wordLen = len(word)
+    errorCount = 0
+    percentWrong = round((wordLen / 3), 0)
+    foundWord = ""
+
     for w in range(len(word)):
-        if ((x - w) > 0) and((y - w) > 0):
-            if w == (len(word) - 1) and labels[x-w][y-w] == word[w]:
-                return (x, y, x-w, y-w)
-            elif labels[x-w][y-w] == word[w]:
+        if ((x - w) >= 0) and((y - w) >= 0):
+            if word[w] == labels[x-w][y-w]:
+                foundWord += labels[x-w][y-w]
+                continue
+
+            elif (word[w] != labels[x-w][y-w]) and (errorCount <= percentWrong):
+                errorCount += 1
+                foundWord += labels[x-w][y-w]
                 continue
 
             else:
                 break
+
+    if len(foundWord) == wordLen:
+        if errorCount <= percentWrong:
+            return ((x, y, x-(wordLen-1), y-(wordLen-1)), foundWord)
+        
         else:
-            break
-    return
+            return None
 
-def listToNumPy(data):
-    charArray = []
-    for x in range(len(data)):
-        charArray.append(data[x])
-
-    return charArray
-
+    return None
