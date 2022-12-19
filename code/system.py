@@ -182,7 +182,6 @@ def find_words(labels: np.ndarray, words: List[str], model: dict) -> List[tuple]
                     found = True
 
         if found == True:
-            print(tempPosition)
             if len(tempPosition) > 1:
 
                 bestword = ""
