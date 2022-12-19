@@ -11,7 +11,6 @@ from typing import List
 
 import numpy as np
 import scipy.linalg
-import math
 from utils import utils
 from utils.utils import Puzzle
 
@@ -47,15 +46,9 @@ def load_puzzle_feature_vectors(image_dir: str, puzzles: List[Puzzle]) -> np.nda
 
 def reduce_dimensions(data: np.ndarray, model: dict) -> np.ndarray:
     """Reduce the dimensionality of a set of feature vectors down to N_DIMENSIONS.
-
-    REWRITE THIS FUNCTION AND THIS DOCSTRING
-
     Takes the raw feature vectors and reduces them down to the required number of
-    dimensions. Note, the `model` dictionary is provided as an argument so that
-    you can pass information from the training stage, e.g. if using a dimensionality
-    reduction technique that requires training, e.g. PCA.
-
-    The dummy implementation below simply returns the first N_DIMENSIONS columns.
+    dimensions using a PCA reduction technique.
+    Returns a reduced data set of N_DIMENSIONS columns
 
     Args:
         data (np.ndarray): The feature vectors to reduce.
@@ -78,18 +71,8 @@ def reduce_dimensions(data: np.ndarray, model: dict) -> np.ndarray:
 
 def process_training_data(fvectors_train: np.ndarray, labels_train: np.ndarray) -> dict:
     """Process the labeled training data and return model parameters stored in a dictionary.
-
-    REWRITE THIS FUNCTION AND THIS DOCSTRING
-
-    This is your classifier's training stage. You need to learn the model parameters
-    from the training vectors and labels that are provided. The parameters of your
-    trained model are then stored in the dictionary and returned. Note, the contents
-    of the dictionary are up to you, and it can contain any serializable
-    data types stored under any keys. This dictionary will be passed to the classifier.
-
-    The dummy implementation stores the labels and the dimensionally reduced training
-    vectors. These are what you would need to store if using a non-parametric
-    classifier such as a nearest neighbour or k-nearest neighbour classifier.
+    This returns a model with the training labels as a list, the training vectors as a list,
+    and the reduced training vectors as a list.
 
     Args:
         fvectors_train (np.ndarray): training data feature vectors stored as rows.
@@ -99,10 +82,6 @@ def process_training_data(fvectors_train: np.ndarray, labels_train: np.ndarray) 
         dict: a dictionary storing the model data.
     """
 
-    # The design of this is entirely up to you.
-    # Note, if you are using an instance based approach, e.g. a nearest neighbour,
-    # then the model will need to store the dimensionally-reduced training data and labels
-    # e.g. Storing training data labels and feature vectors in the model.
     model = {}
     model["labels_train"] = labels_train.tolist()
     model["data_train"] = fvectors_train.tolist()
@@ -112,15 +91,8 @@ def process_training_data(fvectors_train: np.ndarray, labels_train: np.ndarray) 
 
 
 def classify_squares(fvectors_test: np.ndarray, model: dict) -> List[str]:
-    """Dummy implementation of classify squares.
-
-    REWRITE THIS FUNCTION AND THIS DOCSTRING
-
-    This is the classification stage. You are passed a list of unlabelled feature
-    vectors and the model parameters learn during the training stage. You need to
-    classify each feature vector and return a list of labels.
-
-    In the dummy implementation, the label 'E' is returned for every square.
+    """ Nearest Neighbour Classification is used to classify the squares.
+    The code was taken from the lab in week 6 and adapated to fit the project and data coming in.
 
     Args:
         fvectors_train (np.ndarray): feature vectors that are to be classified, stored as rows.
@@ -137,10 +109,8 @@ def classify_squares(fvectors_test: np.ndarray, model: dict) -> List[str]:
     # Using all the features from the training and test data
     features = np.arange(0, train.shape[1])
 
-    #features = (0, 2, 4, 7, 8 ,10, 11, 13, 19)
     train = train[:, features]
     test = fvectors_test[:, features]
-
 
     # Super compact implementation of nearest neighbour
     x = np.dot(test, train.transpose())
@@ -156,20 +126,11 @@ def classify_squares(fvectors_test: np.ndarray, model: dict) -> List[str]:
 
 
 def find_words(labels: np.ndarray, words: List[str], model: dict) -> List[tuple]:
-    """Dummy implementation of find_words.
-
-    REWRITE THIS FUNCTION AND THIS DOCSTRING
-
-    This function searches for the words in the grid of classified letter labels.
-    You are passed the letter labels as a 2-D array and a list of words to search for.
-    You need to return a position for each word. The word position should be
-    represented as tuples of the form (start_row, start_col, end_row, end_col).
-
-    Note, the model dict that was learnt during training has also been passed to this
-    function. Most simple implementations will not need to use this but it is provided
-    in case you have ideas that need it.
-
-    In the dummy implementation, the position (0, 0, 1, 1) is returned for every word.
+    """This function searches the grid of labels to find positions of words.
+    The word positions are in a tuple and represented as shown below:
+        (start_row, start_col, end_row, end_col)
+    
+    If a word is not found then the value (0, 0, 0, 0) is returned instead.s
 
     Args:
         labels (np.ndarray): 2-D array storing the character in each
@@ -180,30 +141,6 @@ def find_words(labels: np.ndarray, words: List[str], model: dict) -> List[tuple]
     Returns:
         list[tuple]: A list of four-element tuples indicating the word positions.
     """
-    
-    
-    """labels = [['Y', 'E', 'A', 'S', 'T', 'E', 'W', 'E', 'N', 'E', 'D', 'S', 'E', 'N', 'N'],
-             ['R', 'B', 'S', 'P', 'E', 'L', 'H', 'G', 'E', 'D', 'N', 'R', 'S', 'I', 'U'],
-             ['I', 'T', 'A', 'E', 'D', 'A', 'E', 'R', 'B', 'T', 'A', 'L', 'F', 'P', 'B'],
-             ['T', 'B', 'E', 'G', 'C', 'I', 'A', 'B', 'A', 'T', 'T', 'A', 'L', 'N', 'D'],
-             ['A', 'R', 'E', 'P', 'U', 'I', 'T', 'S', 'O', 'Y', 'H', 'G', 'U', 'O', 'D'],
-             ['P', 'A', 'E', 'Y', 'M', 'E', 'D', 'M', 'A', 'L', 'T', 'L', 'O', 'A', 'F'],
-             ['A', 'S', 'T', 'A', 'R', 'U', 'T', 'Y', 'T', 'S', 'U', 'R', 'C', 'L', 'B'],
-             ['H', 'R', 'L', 'T', 'T', 'A', 'R', 'T', 'G', 'N', 'S', 'I', 'I', 'A', 'T'],
-             ['C', 'B', 'S', 'I', 'E', 'T', 'N', 'C', 'E', 'T', 'K', 'N', 'T', 'N', 'S'],
-             ['E', 'A', 'R', 'O', 'C', 'H', 'I', 'A', 'E', 'R', 'I', 'O', 'I', 'N', 'A'],
-             ['L', 'N', 'E', 'E', 'I', 'E', 'C', 'P', 'R', 'N', 'N', 'A', 'L', 'B', 'O'],
-             ['A', 'N', 'B', 'P', 'A', 'E', 'D', 'S', 'A', 'G', 'R', 'Y', 'S', 'L', 'T'],
-             ['E', 'O', 'O', 'A', 'T', 'D', 'C', 'P', 'U', 'G', 'C', 'R', 'E', 'O', 'F'],
-             ['M', 'C', 'D', 'I', 'G', 'R', 'S', 'E', 'I', 'R', 'R', 'E', 'N', 'O', 'O'],
-             ['E', 'K', 'H', 'I', 'U', 'E', 'H', 'T', 'O', 'E', 'B', 'K', 'S', 'M', 'C'],
-             ['L', 'W', 'L', 'M', 'O', 'C', 'L', 'U', 'I', 'G', 'M', 'A', 'H', 'E', 'A'],
-             ['O', 'R', 'B', 'R', 'O', 'U', 'T', 'E', 'N', 'C', 'I', 'B', 'S', 'R', 'C'],
-             ['H', 'S', 'O', 'I', 'M', 'O', 'Y', 'E', 'O', 'D', 'K', 'L', 'O', 'R', 'C'],
-             ['W', 'P', 'R', 'L', 'N', 'M', 'U', 'F', 'F', 'I', 'N', 'S', 'N', 'C', 'I'],
-             ['I', 'B', 'E', 'S', 'L', 'S', 'H', 'C', 'I', 'W', 'D', 'N', 'A', 'S', 'A']] """
-    
-
     allWordPositions = []
 
     for word in words:
@@ -269,7 +206,6 @@ def find_words(labels: np.ndarray, words: List[str], model: dict) -> List[tuple]
         else:
             allWordPositions.append((0,0,0,0))
 
-    print(allWordPositions)
     return allWordPositions
 
 def checkBestWord(correct: str, word1: str, word2: str):
@@ -293,6 +229,9 @@ def checkBestWord(correct: str, word1: str, word2: str):
         else:
             return word2
 
+
+# All functions below here check words for each direction, they all do somthing very similar
+# Its just values in the direction that theyre looking at which are changed
 def checkRowForward(labels: np.ndarray, word: str, x: int, y: int):
     wordLen = len(word)
     errorCount = 0

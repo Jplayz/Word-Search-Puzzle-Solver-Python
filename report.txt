@@ -1,24 +1,28 @@
 # Word Search assignment report
-
-[Replace the square-bracketed text with your own text. *Leave everything else unchanged.* 
-Note, the reports are parsed to check word limits, etc. Changing the format may cause 
-the parsing to fail.]
-
 ## Feature Extraction (Max 200 Words)
 
-[Describe and justify the design of your feature extraction. Note, feature extraction 
-includes all the steps that you have taken to produce the 20-dimensional feature vector
-starting from the initial image of the puzzle.]
+I have used a principle component analysis method as it was simple to implement and does a decent job with reducing the data. 
+The basic PCA with no feature selection gets a word score for low resolution words of 51%. 
+As we did it in two lab classes too it was the one I felt like I have the best understanding on so when it came to having issues I thought it would be easier to debug.
+
+The first step done is to take the training data and put it in a covariance matrix. 
+After that it gets the eigenvector from the covariance matrix. 
+Then it takes the data passed through and takes it away from the mean of the training data to centre the data. 
+After that the dot product is done to get the reduced dataset.
 
 ## Letter Classifier (Max 200 Words)
 
-[Describe and justify the design of your classifier and any associated classifier training
-stage.]
+I used a simple nearest neighbour classification technique with no changed features. 
+I did this because it’s a simple classification technique that is very high performance. 
+Cosine distance was used to measure the distance.
 
 ## Word Finder (Max 200 Words)
 
-[Describe the approach that you have taken for finding the words after the letters have
-been classified.]
+When originally desiging my algorithm I looked for exact word matches by trying to find the correct starting letter then expanding out in each direction.
+This was effective but for both the high and the low word score it wouldn't be able to find words that the classifier may have missed.
+So I re-designed it with room for assumption, I decided that 1/3 would be the threshold for how much it of the word it could guess by because its 1 wrong letter for 3 letter words.
+I decided to round up to the nearest whole number as well so technically 5 letter words have a 2 letter max threshold of incorrectness.
+There is another function to compare letters to find which word is closest to the correct word at the end of the program.
 
 ## Performance
 
@@ -26,15 +30,13 @@ My percentage correctness scores (to 1 decimal place) for the development data a
 
 High quality data:
 
-- Percentage Letters Correct: [Insert percentage here, e.g. 98.1% - remove brackets]
-- Percentage Words Correct: [Insert percentage here, e.g. 98.0% - remove brackets]
+- Percentage Letters Correct: 99.3%
+- Percentage Words Correct: 100.0%
 
 Low quality data:
 
-- Percentage Letters Correct: [Insert percentage here, e.g. 83.3% - remove brackets]
-- Percentage Words Correct: [Insert percentage here, e.g. 58.1% - remove brackets]
+- Percentage Letters Correct: 51.0%
+- Percentage Words Correct: 33.0%
 
 ## Other information (Optional, Max 100 words)
 
-[Optional: highlight any significant aspects of your system that are NOT covered in the
-sections above]
